@@ -37,6 +37,7 @@ class BaseDB:
             try:
                 engine.dispose()
             except :
+                # engine cannot be dispose #TODO fix it!!
                 pass
 
     def get_engine(self, db_name):
@@ -45,7 +46,6 @@ class BaseDB:
         :return:
         """
         pass
-
 
     def create_connection(self, db_name=None):
         """
@@ -142,24 +142,25 @@ class BaseDB:
 
         return dfs
 
-    def save_table(self, df, db_name, table_name, if_exists='replace'):
+    def save_table(self, df, db_name, table_name, **kwargs):
         """
         Save pandas dataframe to database
         :param df: dataframe to be save (pandas dataframe)
         :param db_name: name of database (str)
         :param table_name: name of table (str)
-        :param  if_exists: {'fail', 'replace', 'append'}, default 'replace'
-            - fail: If table exists, do nothing.
-            - replace: If table exists, drop it, recreate it, and insert data.
-            - append: If table exists, insert data. Create if does not exist.
+        :param  kwargs: pandas to_sql arguments e.g. if_exists, dtype, ...
         :return:
         """
 
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
-        # Write stock_df to table tmp_status (if tmp_status exists, replace it)
-        df.to_sql(name=table_name, con=engine, if_exists=if_exists, index=False)
+        # Set default if_exists to replace
+        if 'if_exists' not in kwargs:
+            kwargs['if_exists'] = 'replace'
+
+        # Write df to database
+        df.to_sql(name=table_name, con=engine, index=False, **kwargs)
 
         # Close connection
         connection.close()

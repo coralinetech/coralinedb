@@ -1,7 +1,8 @@
 from coralinedb import MySQLDB
 import pandas as pd
+from sqlalchemy.types import DECIMAL
 
-host = ""
+host = ''
 username = ''
 password = ''
 db_name = ''
@@ -17,11 +18,11 @@ print(db.get_databases())
 print(db.get_tables(db_name))
 
 df = pd.DataFrame()
-df['A'] = [1, 2, 3]
+df['A'] = [1.34434, 2.4, 3.3]
 df['B'] = [5, 6, 7]
 df['C'] = [6, 7, 8]
 
-db.save_table(df, db_name, 'test_table')
+db.save_table(df, db_name, 'test_table', dtype={'A': DECIMAL(30, 10)})
 
 # Load a table as dataframe
 df = db.load_table(db_name, 'test_table')
