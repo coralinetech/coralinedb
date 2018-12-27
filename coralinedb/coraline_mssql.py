@@ -15,9 +15,15 @@ class MSSQLDB(BaseDB):
         """
         engine_key = db_name if db_name != "" else "_"
 
-        if engine_key not in self.engines:
-            # Create a new one
-            self.engines[engine_key] = create_engine("mssql+pymssql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name)
+        if engine_key in self.engines:
+            engine = self.engines[engine_key]
+            try:
+                engine.dispose()
+            except:
+                pass
+
+        # Create a new one
+        self.engines[engine_key] = create_engine("mssql+pymssql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name)
 
         return self.engines[engine_key]
 

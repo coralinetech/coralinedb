@@ -22,7 +22,7 @@ df['A'] = [1.34434, 2.4, 3.3]
 df['B'] = [5, 6, 7]
 df['C'] = [6, 7, 8]
 
-db.save_table(df, db_name, 'test_table', dtype={'A': DECIMAL(30, 10)})
+db.save_table(df, db_name, 'test_table', dtype={'A': DECIMAL(10, 5)})
 
 # Load a table as dataframe
 df = db.load_table(db_name, 'test_table')

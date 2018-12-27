@@ -18,9 +18,15 @@ class MySQLDB(BaseDB):
         """
         engine_key = db_name if db_name != "" else "_"
 
-        if engine_key not in self.engines:
-            # Create a new one
-            self.engines[engine_key] = create_engine("mysql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name + '?charset=utf8mb4')
+        if engine_key in self.engines:
+            engine = self.engines[engine_key]
+            try:
+                engine.dispose()
+            except:
+                pass
+
+        # Create a new one
+        self.engines[engine_key] = create_engine("mysql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name + '?charset=utf8mb4')
 
         return self.engines[engine_key]
 
