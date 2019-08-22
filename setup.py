@@ -4,7 +4,7 @@ from setuptools import find_packages
 setup(
     name='coralinedb',
     packages=find_packages(),
-    version='1.5',
+    version='2.0',
     description='Coraline Database Manager Package',
     long_description="""
     Coraline Database Manager Package
@@ -44,7 +44,7 @@ setup(
     author='Jiranun J.',
     author_email='jiranun@coraline.co.th',
     url='https://www.coraline.co.th',
-    keywords=['mysql', 'database', 'db', 'coraline', 'mssql', 'data'],
+    keywords=['mysql', 'database', 'db', 'coraline', 'mssql', 'data', 'postgresql', 'postgres'],
     python_requires='>=3.6',
     classifiers=['Programming Language :: Python',
                  'Programming Language :: SQL',
