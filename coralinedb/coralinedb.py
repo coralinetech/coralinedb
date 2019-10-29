@@ -180,17 +180,23 @@ class BaseDB:
         """
         pass
 
-    def query(self, sql_statement, db_name=None):
+    def query(self, sql_statement, db_name=None, **kwargs):
         """
         Run SQL query
         :param sql_statement: SQL statement (str)
         :param db_name: database name
+        :param **kwargs: see pandas.read_sql() doc
         :return:
         """
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
-        result = pd.read_sql(sql_statement, connection, coerce_float=True)
+        # Prevent duplicate keys
+        kwargs.pop("sql", None)
+        kwargs.pop("con", None)
+        kwargs.pop("coerce_float", None)
+
+        result = pd.read_sql(sql=sql_statement, con=connection, coerce_float=True, **kwargs)
 
         # Close connection
         connection.close()

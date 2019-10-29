@@ -26,7 +26,10 @@ db.save_table(df, db_name, 'test_table', dtype={'A': DECIMAL(10, 5)})
 
 # Load a table as dataframe
 df = db.load_table(db_name, 'test_table')
+print(df)
 
+# Query with where condition
+df = db.query('select * from test_table where A > %(A)s', db_name, params={'A':'2'})
 print(df)
 
 # Execute an sql statement
