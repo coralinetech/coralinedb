@@ -142,12 +142,14 @@ class BaseDB:
 
         return dfs
 
-    def save_table(self, df, db_name, table_name, **kwargs):
+    def save_table(self, df, db_name, table_name, index=False, if_exists='replace', **kwargs):
         """
         Save pandas dataframe to database
         :param df: dataframe to be save (pandas dataframe)
         :param db_name: name of database (str)
         :param table_name: name of table (str)
+        :param index: Write DataFrame index as a column (boolean)
+        :param if_exists: How to behave if the table already exists ({‘fail’, ‘replace’, ‘append’})
         :param  kwargs: pandas to_sql arguments e.g. if_exists, dtype, ...
         :return:
         """
@@ -155,12 +157,12 @@ class BaseDB:
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
-        # Set default if_exists to replace
-        if 'if_exists' not in kwargs:
-            kwargs['if_exists'] = 'replace'
+        # Prevent duplicate keys
+        kwargs.pop("name", None)
+        kwargs.pop("con", None)
 
         # Write df to database
-        df.to_sql(name=table_name, con=engine, index=False, **kwargs)
+        df.to_sql(name=table_name, con=engine, index=index, if_exists=if_exists, **kwargs)
 
         # Close connection
         connection.close()
