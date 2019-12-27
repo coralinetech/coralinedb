@@ -239,10 +239,13 @@ class BaseDB:
         engine, connection = self.create_connection(db_name)
 
         # Execute SQL
-        connection.execute(sql_statement)
+        result = connection.execute(sql_statement)
 
         # Close connection
         connection.close()
+
+        # return metadata of query execution result
+        return result
 
 
 def print_help():
