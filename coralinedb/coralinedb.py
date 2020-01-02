@@ -90,12 +90,13 @@ class BaseDB:
             except:
                 print("")
 
-    def load_table(self, db_name, table_name):
+    def load_table(self, db_name, table_name, **kwargs):
         """
         Load a table from database
         *The whole table will be download, please make sure you have enough memory*
         :param db_name: name of database (str)
         :param table_name: table name to be read (str)
+        :param **kwargs: pandas read_sql arguments e.g. params, parse_dates, ...
         :return: pandas dataframe if table exists. Otherwise, None
         """
 
@@ -105,7 +106,13 @@ class BaseDB:
         # Check if table exists and read
         if engine.dialect.has_table(engine, table_name):
             sql = 'SELECT * FROM %s' % table_name
-            result = pd.read_sql(sql, connection, coerce_float=True)
+
+            # Prevent duplicate keys
+            kwargs.pop("sql", None)
+            kwargs.pop("con", None)
+            kwargs.pop("coerce_float", None)
+
+            result = pd.read_sql(sql=sql, con=connection, coerce_float=True, **kwargs)
         else:
             print(table_name, "does not exist")
             result = None
@@ -115,12 +122,13 @@ class BaseDB:
 
         return result
 
-    def load_tables(self, db_name, table_names):
+    def load_tables(self, db_name, table_names, **kwargs):
         """
         Load all tables from database
         *The whole table will be download, please make sure you have enough memory*
         :param db_name: name of database (str)
         :param table_names: list of table names (list of strings)
+        :param **kwargs: pandas read_sql arguments e.g. params, parse_dates, ...
         :return: list of pandas dataframes if the corresponding table exists. Otherwise, None
         """
         # Create Connection
@@ -128,10 +136,16 @@ class BaseDB:
 
         dfs = []
 
+        # Prevent duplicate keys
+        kwargs.pop("sql", None)
+        kwargs.pop("con", None)
+        kwargs.pop("coerce_float", None)
+
         # Load each table
         for tbn in table_names:
             if engine.dialect.has_table(engine, tbn):
-                df = pd.read_sql('SELECT * FROM %s' % tbn, connection, coerce_float=True)
+                sql = 'SELECT * FROM %s' % tbn
+                df = pd.read_sql(sql=sql, con=connection, coerce_float=True, **kwargs)
             else:
                 print(tbn, "does not exist")
                 df = None
@@ -150,7 +164,7 @@ class BaseDB:
         :param table_name: name of table (str)
         :param index: Write DataFrame index as a column (boolean)
         :param if_exists: How to behave if the table already exists ({‘fail’, ‘replace’, ‘append’})
-        :param  kwargs: pandas to_sql arguments e.g. if_exists, dtype, ...
+        :param kwargs: pandas to_sql arguments e.g. if_exists, dtype, ...
         :return:
         """
 
