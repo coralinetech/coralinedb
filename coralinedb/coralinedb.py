@@ -242,18 +242,20 @@ class BaseDB:
 
         return result
 
-    def execute(self, sql_statement, db_name=None):
+    def execute(self, sql_statement, db_name=None, params=None):
         """
         Execute SQL Statement to database
         :param sql_statement: sql statement (str)
         :param db_name: database name (str)
+        :param params: parameters to cast the %s in sql statement (tuple or dictionary), for usecase read the link below
+                    https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-execute.html
         :return:
         """
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
         # Execute SQL
-        result = connection.execute(sql_statement)
+        result = connection.execute(sql_statement, params)
 
         # Close connection
         connection.close()
