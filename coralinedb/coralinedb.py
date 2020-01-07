@@ -242,21 +242,21 @@ class BaseDB:
 
         return result
 
-    def execute(self, sql_statement, db_name=None, params=None, multi=False):
+    def execute(self, sql_statement, db_name=None, params=None):
         """
         Execute SQL Statement to database
         :param sql_statement: sql statement (str)
         :param db_name: database name (str)
-        :param params: cast the %s in sql statement (tuple or dictionary), for usecase read the link below
-                    https://dev.mysql.com/doc/connector-python/en/connector-python-api-mysqlcursor-execute.html
-        :param multi: is able to execute multiple sql statement within one execution (bool)
+        :param params: cast the %s in sql statement (tuple or dictionary), 
+                        reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
         :return:
+            metadata of query execution (object)
         """
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
         # Execute SQL
-        result = connection.execute(sql_statement, params, multi)
+        result = connection.execute(sql_statement, params)
 
         # Close connection
         connection.close()
