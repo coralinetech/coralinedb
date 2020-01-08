@@ -242,7 +242,7 @@ class BaseDB:
 
         return result
 
-    def execute(self, sql_statement, db_name=None, params=None):
+    def execute(self, sql_statement, db_name=None, **kwargs):
         """
         Execute SQL Statement to database
         :param sql_statement: sql statement (str)
@@ -256,7 +256,7 @@ class BaseDB:
         engine, connection = self.create_connection(db_name)
 
         # Execute SQL
-        result = connection.execute(sql_statement, params)
+        result = connection.execute(sql_statement, **kwargs)
 
         # Close connection
         connection.close()
