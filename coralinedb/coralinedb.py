@@ -47,7 +47,7 @@ class BaseDB:
         """
         pass
 
-    def create_connection(self, db_name=None):
+    def create_connection(self, db_name=None, raw=False):
         """
         Create Connection and engine for database
         :param: db_name : name of connecting database (str)
@@ -67,7 +67,7 @@ class BaseDB:
                 engine = self.get_engine(db_name)
 
                 # Create connection for query
-                connection = engine.connect()
+                connection = engine.connect() if raw == False else engine.raw_connection()
 
                 connected = True
 
@@ -264,6 +264,30 @@ class BaseDB:
         # return metadata of query execution result
         return result
 
+    def call_procedure(self, sql_statement, db_name=None, **kwargs):
+        """
+        Execute SQL Stored Procedure Statement to database
+        :param sql_statement: sql statement (str)
+        :param db_name: database name (str)
+        :param params: cast the %s in sql statement (tuple or dictionary), 
+                        reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
+        :return:
+            metadata of query execution (object)
+        """
+        # Create Connection
+        engine, connection = self.create_connection(db_name, raw=True)
+
+        # Execute Procedure
+        cursor = connection.cursor()
+        result = cursor.execute(sql_statement, **kwargs)
+        cursor.close()
+        connection.commit()
+
+        # Close connection
+        connection.close()
+
+        # return metadata of query execution result
+        return result
 
 def print_help():
     """
