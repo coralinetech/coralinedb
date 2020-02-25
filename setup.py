@@ -39,6 +39,10 @@ setup(
     
         table = sql_db.query("show databases;") \n
         table = sql_db.query("SELECT * FROM ...", "database_name")
+
+    6. Run store procedure on host (with or without database name)
+    
+        result_df = db.call_procedure("CALL store_procedure")
     
     """,
     author='Jiranun J.',
