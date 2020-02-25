@@ -272,22 +272,26 @@ class BaseDB:
         :param params: cast the %s in sql statement (tuple or dictionary), 
                         reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
         :return:
-            metadata of query execution (object)
+            pandas dataframe if the corresponding table exists. Otherwise, None
         """
         # Create Connection
         engine, connection = self.create_connection(db_name, raw=True)
 
         # Execute Procedure
         cursor = connection.cursor()
-        result = cursor.execute(sql_statement, **kwargs)
-        cursor.close()
-        connection.commit()
+        cursor.execute(sql_statement, **kwargs)
+
+        # Get Results
+        data = list(cursor.fetchall())
+        column_names = [col[0] for col in cursor.description] if cursor.description is not None else None
 
         # Close connection
+        cursor.close()
+        connection.commit()
         connection.close()
-
-        # return metadata of query execution result
-        return result
+    
+        # return query execution result
+        return pd.DataFrame(data, columns = column_names) if column_names is not None else None
 
 def print_help():
     """
