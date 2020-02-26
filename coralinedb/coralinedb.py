@@ -264,7 +264,7 @@ class BaseDB:
         # return metadata of query execution result
         return result
 
-    def call_procedure(self, sql_statement, db_name=None, **kwargs):
+    def call_procedure(self, sql_statement, db_name=None, return_df=False, **kwargs):
         """
         Execute SQL Stored Procedure Statement to database
         :param sql_statement: sql statement (str)
@@ -272,22 +272,30 @@ class BaseDB:
         :param params: cast the %s in sql statement (tuple or dictionary), 
                         reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
         :return:
-            metadata of query execution (object)
+            	Number of affected rows or pandas dataframe if the corresponding table exists.
         """
         # Create Connection
         engine, connection = self.create_connection(db_name, raw=True)
 
         # Execute Procedure
         cursor = connection.cursor()
-        result = cursor.execute(sql_statement, **kwargs)
-        cursor.close()
-        connection.commit()
+        affected_rows = cursor.execute(sql_statement, **kwargs)
+
+        # Get Data
+        if return_df == True:
+            data = list(cursor.fetchall())
+            column_names = [col[0] for col in cursor.description] if cursor.description is not None else None
 
         # Close connection
+        cursor.close()
+        connection.commit()
         connection.close()
-
-        # return metadata of query execution result
-        return result
+        
+        # return result
+        if return_df == True:
+            return pd.DataFrame(data, columns = column_names) if column_names is not None else None
+        else:
+            return affected_rows
 
 def print_help():
     """
