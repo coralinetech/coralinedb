@@ -46,5 +46,6 @@ db.query("SELECT * FROM ...", "database_name")
 6. Run store procedure on host (with or without database name)
 ```
 e.g.
-result_df = db.call_procedure("CALL store_procedure")
+affected_row = db.call_procedure("CALL store_procedure")
+dataframe = db.call_procedure("CALL store_procedure", return_df=True)
 ```
