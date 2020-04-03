@@ -47,7 +47,7 @@ class BaseDB:
         """
         pass
 
-    def create_connection(self, db_name=None):
+    def create_connection(self, db_name=None, raw=False):
         """
         Create Connection and engine for database
         :param: db_name : name of connecting database (str)
@@ -67,7 +67,7 @@ class BaseDB:
                 engine = self.get_engine(db_name)
 
                 # Create connection for query
-                connection = engine.connect()
+                connection = engine.connect() if raw == False else engine.raw_connection()
 
                 connected = True
 
@@ -264,6 +264,38 @@ class BaseDB:
         # return metadata of query execution result
         return result
 
+    def call_procedure(self, sql_statement, db_name=None, return_df=False, **kwargs):
+        """
+        Execute SQL Stored Procedure Statement to database
+        :param sql_statement: sql statement (str)
+        :param db_name: database name (str)
+        :param params: cast the %s in sql statement (tuple or dictionary), 
+                        reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
+        :return:
+            	Number of affected rows or pandas dataframe if the corresponding table exists.
+        """
+        # Create Connection
+        engine, connection = self.create_connection(db_name, raw=True)
+
+        # Execute Procedure
+        cursor = connection.cursor()
+        affected_rows = cursor.execute(sql_statement, **kwargs)
+
+        # Get Data
+        if return_df == True:
+            data = list(cursor.fetchall())
+            column_names = [col[0] for col in cursor.description] if cursor.description is not None else None
+
+        # Close connection
+        cursor.close()
+        connection.commit()
+        connection.close()
+        
+        # return result
+        if return_df == True:
+            return pd.DataFrame(data, columns = column_names) if column_names is not None else None
+        else:
+            return affected_rows
 
 def print_help():
     """

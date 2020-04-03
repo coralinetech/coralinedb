@@ -4,7 +4,7 @@ from setuptools import find_packages
 setup(
     name='coralinedb',
     packages=find_packages(),
-    version='2.6',
+    version='2.8',
     description='Coraline Database Manager Package',
     long_description="""
     Coraline Database Manager Package
@@ -39,6 +39,11 @@ setup(
     
         table = sql_db.query("show databases;") \n
         table = sql_db.query("SELECT * FROM ...", "database_name")
+
+    6. Run store procedure on host (with or without database name)
+
+        affected_row = db.call_procedure("CALL store_procedure")
+        dataframe = db.call_procedure("CALL store_procedure", return_df=True)
     
     """,
     author='Jiranun J.',
