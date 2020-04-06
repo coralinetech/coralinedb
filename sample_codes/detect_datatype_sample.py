@@ -18,7 +18,7 @@ DB_TABLE_NAME = ''
 
 if __name__ == "__main__":
 
-    file_path = 'C:/Users/thana/Desktop/auto-import-data/dataset/pokemon.csv'
+    file_path = 'dataset.csv'
 
     # get array of simplified column names
     arr_header, delimiter = get_simplified_column_name_and_delimiter(file_path)
