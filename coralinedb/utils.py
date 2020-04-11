@@ -5,6 +5,7 @@ import sqlalchemy
 import pandas as pd
 import numpy as np
 from math import ceil
+from operator import itemgetter
 
 def get_simplified_column_name_and_delimiter(file_path):
     """
@@ -19,13 +20,13 @@ def get_simplified_column_name_and_delimiter(file_path):
     with open(file_path, encoding='utf8') as file:
         first_line = file.readline()
 
-    list_of_count_delimiters = {
-        ',': first_line.count(','),
-        '|': first_line.count('|'),
-        '\t': first_line.count('\t')
-    }
+    list_of_count_delimiters = [
+        (',', first_line.count(',')),
+        ('|', first_line.count('|')),
+        ('\t', first_line.count('\t'))
+    ]
 
-    delimiter = max(zip(list_of_count_delimiters.values(), list_of_count_delimiters.keys()))[1]
+    delimiter = max(list_of_count_delimiters, key=itemgetter(1))[0]
 
     arr_header = simplify_column_name(first_line, delimiter)
 
