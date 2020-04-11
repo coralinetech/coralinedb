@@ -42,7 +42,7 @@ def simplify_column_name(column_name, delimiter):
     :return:
        array of preprocessed column name (array)
     """
-    
+
     temp_string = column_name.lower()
     arr_header = re.sub('[^{}A-Za-z0-9 ]+'.format(delimiter), '', temp_string).replace(' ', '_').split(delimiter)
 
@@ -56,7 +56,11 @@ def convert_df_to_datetime(df, column_name):
     :return: 
         processed dataframe (df)
     """
-    
+
+    # if df.column_name is datetime, then skip to convert df to datetime
+    if 'datetime' in str(df[column_name].dtype):
+        return df
+        
     df[column_name] = df[column_name].map(str)
     df[column_name] = df[column_name].replace("NaT", None)
     df[column_name] = df[column_name].replace("NaN", None)
@@ -109,7 +113,7 @@ def get_detected_column_types(df):
 
     return col_dict
 
-def detect_and_convert_datatye(df):
+def detect_and_convert_datatype(df):
     """
     detect the data type of each column 
     and convert each column into recommended data type
@@ -123,7 +127,7 @@ def detect_and_convert_datatye(df):
     # try to convert datetime according to column_dict
     for x in column_dict:
         if column_dict[x] == 'DATETIME':
-            convert_df_to_datetime(df, x)
+            df = convert_df_to_datetime(df, x)
 
     return df
 
@@ -183,7 +187,7 @@ def get_datatype_each_col(df, file_path):
         dict of data type of each column in SQLAlchemy standard (dict)
     """
 
-    df = detect_and_convert_datatye(df)
+    df = detect_and_convert_datatype(df)
 
     dtype_dict = convert_df_datatype_to_sqlalchemy_datatype(df)
 
