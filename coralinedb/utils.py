@@ -37,13 +37,13 @@ def simplify_column_name(column_name, delimiter):
     """
     simplify all the columnname by removing all non-alphabetic character 
     except number, and converting name into snake case
-    :param column_name: array of column name (array)
+    :param column_name: column name (str)
     :param deliemter: delimiter that detected from detect_delimiter() (str)
     :return:
        array of preprocessed column name (array)
     """
-
-    temp_string = ' '.join(column_name.lower().split())
+    
+    temp_string = column_name.lower()
     arr_header = re.sub('[^{}A-Za-z0-9 ]+'.format(delimiter), '', temp_string).replace(' ', '_').split(delimiter)
 
     return arr_header
