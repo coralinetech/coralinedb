@@ -77,9 +77,8 @@ def get_detected_column_types(df):
     Get data type of each columns ('DATETIME', 'NUMERIC' or 'STRING')
     :param df: pandas dataframe
     :return: 
-        columns dict (dict)
+        dataframe that all datatypes are converted (df)
     """
-    col_dict = {}
     for c in df.columns:
         # Convert column to string
         col_data = df[c].map(str)
@@ -89,8 +88,12 @@ def get_detected_column_types(df):
         # Check DATETIME
         try:
             # Check if it's able to convert column to datetime
-            pd.to_datetime(col_data)
-            col_dict[c] = 'DATETIME'
+
+            # if column is datetime, then skip to convert
+            if 'datetime' in str(col_data.dtype):
+                continue
+
+            df[c] = pd.to_datetime(col_data)
             continue
         except ValueError:
             pass
@@ -100,34 +103,15 @@ def get_detected_column_types(df):
             # Drop NaN rows
             series = df[c].dropna()
 
+            # if column_name is int or float, then skip to convert
+            if 'int' in str(col_data.dtype) or 'float' in str(col_data.dtype):
+                continue
+
             # Check if it can be converted to numeric
-            pd.to_numeric(series)
+            df[c] = pd.to_numeric(series)
 
-            if df[c].dtype == object:
-                col_dict[c] = 'STRING'
-            else:
-                col_dict[c] = 'NUMERIC'
         except ValueError:
-            # Otherwise, it's VARCHAR column
-            col_dict[c] = "STRING"
-
-    return col_dict
-
-def detect_and_convert_datatype(df):
-    """
-    detect the data type of each column 
-    and convert each column into recommended data type
-    :param df: dataframe (df)
-    :return:
-        new dataframe (df)
-    """
-
-    column_dict = get_detected_column_types(df)
-
-    # try to convert datetime according to column_dict
-    for x in column_dict:
-        if column_dict[x] == 'DATETIME':
-            df = convert_df_to_datetime(df, x)
+            pass
 
     return df
 
@@ -187,7 +171,7 @@ def get_datatype_each_col(df, file_path):
         dict of data type of each column in SQLAlchemy standard (dict)
     """
 
-    df = detect_and_convert_datatype(df)
+    df = get_detected_column_types(df)
 
     dtype_dict = convert_df_datatype_to_sqlalchemy_datatype(df)
 
