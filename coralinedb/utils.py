@@ -121,15 +121,25 @@ def get_max_length_columns(df):
     :param df: dataframe (df)
     :return:
         array of length of each column, array's length should be equal to number of columns (array)
+        array of maximum decimal for float, double, and decimal datatype, otherwise its value is zero
     """
 
     measurer = np.vectorize(len)
     arr_max_len_columns = []
+    arr_max_decimal = []
 
-    for x in measurer(df.values.astype(str)).max(axis=0):
+    for i, x in enumerate(measurer(df.values.astype(str)).max(axis=0)):
+
+        if 'float' in str(df.iloc[:, i].dtype):
+            col_data = df.iloc[:, i].map(str).str.extract('\.(.*)')
+            max_decimal = measurer(col_data.values.astype(str)).max(axis=0)[0]
+            arr_max_decimal.append(max_decimal)
+        else:
+            arr_max_decimal.append(0)
+
         arr_max_len_columns.append(ceil(x / 10) * 10)
 
-    return arr_max_len_columns
+    return arr_max_len_columns, arr_max_decimal
 
 def convert_df_datatype_to_sqlalchemy_datatype(df):
     """
@@ -140,7 +150,7 @@ def convert_df_datatype_to_sqlalchemy_datatype(df):
         dict of data type of each column in SQLAlchemy standard (dict)
     """
     
-    arr_max_len_columns = get_max_length_columns(df)
+    arr_max_len_columns, arr_max_decimal = get_max_length_columns(df)
 
     dtype_dict = {}
 
@@ -151,11 +161,15 @@ def convert_df_datatype_to_sqlalchemy_datatype(df):
         elif 'int' in str(df[col_name].dtype):
             dtype_dict[col_name] = sqlalchemy.types.INTEGER()
         elif 'float' in str(df[col_name].dtype):
-            dtype_dict[col_name] = sqlalchemy.types.DECIMAL(precision=arr_max_len_columns[i], scale=4)
+            dtype_dict[col_name] = sqlalchemy.types.DECIMAL(precision=arr_max_len_columns[i], scale=arr_max_decimal[i])
         elif 'datetime' in str(df[col_name].dtype):
             dtype_dict[col_name] = sqlalchemy.types.DateTime()
         elif 'object' in str(df[col_name].dtype):
-            dtype_dict[col_name] = sqlalchemy.types.VARCHAR(length=arr_max_len_columns[i])
+            # check the limit of varhcar, if exeeds, then use TEXT
+            if arr_max_len_columns[i] > 255:
+                dtype_dict[col_name] = sqlalchemy.types.Text()
+            else:
+                dtype_dict[col_name] = sqlalchemy.types.VARCHAR(length=arr_max_len_columns[i])
         else:
             dtype_dict[col_name] = sqlalchemy.types.VARCHAR(length=arr_max_len_columns[i])
 
