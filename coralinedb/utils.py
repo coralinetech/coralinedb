@@ -44,7 +44,7 @@ def simplify_column_name(column_name, delimiter):
     """
 
     temp_string = column_name.lower()
-    arr_header = re.sub('[^{}A-Za-z0-9 ]+'.format(delimiter), '', temp_string).replace(' ', '_').split(delimiter)
+    arr_header = re.sub('[^{}_A-Za-z0-9 ]+'.format(delimiter), '', temp_string).replace(' ', '_').split(delimiter)
 
     return arr_header
 
