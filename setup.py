@@ -6,7 +6,7 @@ exec(open('coralinedb/version.py').read())
 setup(
     name='coralinedb',
     packages=find_packages(),
-    version='__version__',
+    version=__version__,
     description='Coraline Database Manager Package',
     long_description="""
     Coraline Database Manager Package
