@@ -4,6 +4,7 @@
 
 # import python packages
 import pandas as pd
+from sqlalchemy import create_engine
 import time
 
 
@@ -15,22 +16,34 @@ class BaseDB:
         - show_databases
         - show_tables
     """
-    def __init__(self, host, username, passwd):
-        """
-        Initial object by specify host username and password for database connection
-        :param host: host name of the database (str)
-        :param username: username of the database (str)
-        :param passwd: password of the database (str)
+    def __init__(
+        self, 
+        host: str, 
+        username: str, 
+        passwd: str, 
+        port: str = None):
+        """Initial object by specify host username and password for database connection
+
+        Parameters
+        ----------
+        host : str
+            host url
+        username : str
+            username of database
+        passwd : str
+            password of database
+        port : str, optional
+            port number, by default None
         """
         self.host = host
         self.username = username
         self.passwd = passwd
+        self.port = port
         self.engines = {}
 
     def __del__(self):
         """
-        On delete object
-        :return:
+        On object deleted
         """
         for en_key in self.engines:
             engine = self.engines[en_key]
@@ -39,19 +52,109 @@ class BaseDB:
             except :
                 # engine cannot be dispose #TODO fix it!!
                 pass
+    
+    
+    ################### VIRTUAL METHODS #######################
+    def get_engine_url(self, db_name: str):
+        """Get Engine URL. This will depend on database, so this function must be overriden by subclass
 
-    def get_engine(self, db_name):
-        """
-        Get engine for db name
-        :return:
-        """
-        pass
+        Parameters
+        ----------
+        db_name : str
+            database name
 
-    def create_connection(self, db_name=None, raw=False):
+        Raises
+        ------
+        NotImplementedError
+            this function must be overriden
         """
-        Create Connection and engine for database
-        :param: db_name : name of connecting database (str)
-        :return: engine and connection
+        raise NotImplementedError()
+
+
+    def get_databases(self):
+        """list of all accessable databases on this host
+
+        Raises
+        ------
+        NotImplementedError
+            this function must be overriden
+        """
+        raise NotImplementedError()
+
+
+    def get_tables(self, db_name: str):
+        """List all tables in database
+
+        Parameters
+        ----------
+        db_name : str
+            database name
+
+        Raises
+        ------
+        NotImplementedError
+            this function must be overriden
+        """
+        raise NotImplementedError()
+    #########################################################
+
+    def get_engine(
+        self, 
+        db_name: str = "", 
+        engine_url: str = ""):
+        """Create Engine by db_name or engine_url
+
+        Parameters
+        ----------
+        db_name : str, optional
+            database name, by default ""
+        engine_url : str, optional
+            customize engine url, by default ""
+
+        Returns
+        -------
+        engine
+            created engine
+        """
+
+        engine_key = db_name if db_name != "" else "_"
+
+        if engine_key in self.engines:
+            engine = self.engines[engine_key]
+            try:
+                engine.dispose()
+            except:
+                pass
+        
+        if engine_url == "":
+            engine_url = self.get_engine_url(db_name)
+
+        # Create a new one
+        self.engines[engine_key] = create_engine(engine_url)
+
+        return self.engines[engine_key]
+        
+
+    def create_connection(
+        self, 
+        db_name: str = None, 
+        raw: bool = False,
+        engine_url: str = ""):
+        """Create Connection and engine for database
+
+        Parameters
+        ----------
+        db_name : str, optional
+            database name, by default None
+        raw : bool, optional
+            enable raw connection, by default False
+        engine_url : str, optional
+            custom engine url, by default ""
+
+        Returns
+        -------
+        engine
+            created engine
         """
         connected = False
         max_tries = 10
@@ -78,41 +181,36 @@ class BaseDB:
                 time.sleep(10)
                 max_tries -= 1
 
-    def try_decoration(self, func):
-        """
-        Decoration for looping tries
-        :return:
-        """
-        while True:
-            try:
-                func()
-                break
-            except:
-                print("")
 
-    def load_table(self, db_name, table_name, **kwargs):
-        """
-        Load a table from database
-        *The whole table will be download, please make sure you have enough memory*
-        :param db_name: name of database (str)
-        :param table_name: table name to be read (str)
-        :param **kwargs: pandas read_sql arguments e.g. params, parse_dates, ...
-        :return: pandas dataframe if table exists. Otherwise, None
-        """
+    def load_table(
+        self, 
+        db_name: str, 
+        table_name: str, 
+        **kwargs) -> pd.DataFrame:
+        """Load a table from database
 
+        Parameters
+        ----------
+        db_name : str
+            database name
+        table_name : str
+            table name
+
+        Returns
+        -------
+        pd.DataFrame
+            loaded table
+        """
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
         # Check if table exists and read
         if engine.dialect.has_table(engine, table_name):
-            sql = 'SELECT * FROM %s' % table_name
-
             # Prevent duplicate keys
             kwargs.pop("sql", None)
             kwargs.pop("con", None)
             kwargs.pop("coerce_float", None)
-
-            result = pd.read_sql(sql=sql, con=connection, coerce_float=True, **kwargs)
+            result = pd.read_sql(sql=table_name, con=connection, coerce_float=True, **kwargs)
         else:
             print(table_name, "does not exist")
             result = None
@@ -122,15 +220,26 @@ class BaseDB:
 
         return result
 
-    def load_tables(self, db_name, table_names, **kwargs):
+    def load_tables(
+        self, 
+        db_name: str, 
+        table_names: list, 
+        **kwargs) -> list:
+        """Load all tables from  a database
+
+        Parameters
+        ----------
+        db_name : str
+            database name
+        table_names : list
+            list of table names
+
+        Returns
+        -------
+        list
+            list of loaded table
         """
-        Load all tables from database
-        *The whole table will be download, please make sure you have enough memory*
-        :param db_name: name of database (str)
-        :param table_names: list of table names (list of strings)
-        :param **kwargs: pandas read_sql arguments e.g. params, parse_dates, ...
-        :return: list of pandas dataframes if the corresponding table exists. Otherwise, None
-        """
+        
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
@@ -144,8 +253,7 @@ class BaseDB:
         # Load each table
         for tbn in table_names:
             if engine.dialect.has_table(engine, tbn):
-                sql = 'SELECT * FROM %s' % tbn
-                df = pd.read_sql(sql=sql, con=connection, coerce_float=True, **kwargs)
+                df = pd.read_sql(sql=tbn, con=connection, coerce_float=True, **kwargs)
             else:
                 print(tbn, "does not exist")
                 df = None
@@ -156,16 +264,28 @@ class BaseDB:
 
         return dfs
 
-    def save_table(self, df, db_name, table_name, index=False, if_exists='replace', **kwargs):
-        """
-        Save pandas dataframe to database
-        :param df: dataframe to be save (pandas dataframe)
-        :param db_name: name of database (str)
-        :param table_name: name of table (str)
-        :param index: Write DataFrame index as a column (boolean)
-        :param if_exists: How to behave if the table already exists ({‘fail’, ‘replace’, ‘append’})
-        :param kwargs: pandas to_sql arguments e.g. if_exists, dtype, ...
-        :return:
+    def save_table(
+        self, 
+        df: pd.DataFrame, 
+        db_name: str,
+        table_name: str, 
+        index: bool = False, 
+        if_exists: str = 'replace', 
+        **kwargs):
+        """Save pandas dataframe to database
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            dataframe to be save
+        db_name : str
+            database name
+        table_name : str
+            table name
+        index : bool, optional
+            Write DataFrame index as a column, by default False
+        if_exists : str, optional
+            How to behave if the table already exists ({‘fail’, ‘replace’, ‘append’}), by default 'replace'
         """
 
         # Create Connection
@@ -181,29 +301,27 @@ class BaseDB:
         # Close connection
         connection.close()
 
-    def get_databases(self):
-        """
-        list of all accessable databases on this host
-        :return: list of database names
-        """
-        pass
+    def query(
+        self, 
+        sql_statement: str, 
+        db_name: str = None,
+        **kwargs) -> pd.DataFrame:
+        """Run SQL query
 
-    def get_tables(self, db_name):
-        """
-        List all tables in database
-        :param db_name:  database name (str)
-        :return: list of table names
-        """
-        pass
+        Parameters
+        ----------
+        sql_statement : str
+            SQL statement
+        db_name : str, optional
+            database name, by default None
+        **kwargs: see pandas.read_sql() doc
 
-    def query(self, sql_statement, db_name=None, **kwargs):
+        Returns
+        -------
+        pd.DataFrame
+            data
         """
-        Run SQL query
-        :param sql_statement: SQL statement (str)
-        :param db_name: database name
-        :param **kwargs: see pandas.read_sql() doc
-        :return:
-        """
+
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
@@ -219,12 +337,24 @@ class BaseDB:
 
         return result
 
-    def get_count(self, db_name, table_name):
-        """
-        Get number of rows of a table
-        :param db_name: database name (str)
-        :param table_name: table name (str)
-        :return:
+
+    def get_count(
+        self, 
+        db_name: str, 
+        table_name: str) -> int:
+        """Get number of rows of a table
+
+        Parameters
+        ----------
+        db_name : str
+            database name
+        table_name : str
+            table name
+
+        Returns
+        -------
+        int
+            number of rows
         """
         # Create Connection
         engine, connection = self.create_connection(db_name)
@@ -242,16 +372,26 @@ class BaseDB:
 
         return result
 
-    def execute(self, sql_statement, db_name=None, **kwargs):
+    def execute(
+        self, 
+        sql_statement: str,
+        db_name: str = None,
+        **kwargs):
+        """Execute SQL Statement to database
+
+        Parameters
+        ----------
+        sql_statement : str
+            SQL statement
+        db_name : str, optional
+            database name, by default None
+
+        Returns
+        -------
+        object
+            metadata of query execution
         """
-        Execute SQL Statement to database
-        :param sql_statement: sql statement (str)
-        :param db_name: database name (str)
-        :param params: cast the %s in sql statement (tuple or dictionary), 
-                        reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
-        :return:
-            metadata of query execution (object)
-        """
+        
         # Create Connection
         engine, connection = self.create_connection(db_name)
 
@@ -264,16 +404,30 @@ class BaseDB:
         # return metadata of query execution result
         return result
 
-    def call_procedure(self, sql_statement, db_name=None, return_df=False, **kwargs):
-        """
-        Execute SQL Stored Procedure Statement to database
-        :param sql_statement: sql statement (str)
-        :param db_name: database name (str)
-        :param params: cast the %s in sql statement (tuple or dictionary), 
-                        reference: https://pymysql.readthedocs.io/en/latest/modules/cursors.html
-        :return:
-            	Number of affected rows or pandas dataframe if the corresponding table exists.
-        """
+
+    def call_procedure(
+        self, 
+        sql_statement: str, 
+        db_name: str = None, 
+        return_df: bool = False, 
+        **kwargs):
+        """Execute SQL Stored Procedure Statement to database
+
+        Parameters
+        ----------
+        sql_statement : str
+            SQL statement
+        db_name : str, optional
+            database name, by default None
+        return_df : bool, optional
+            return dataframe flag, by default False
+
+        Returns
+        -------
+        int or pd.DataFrame
+            Number of affected rows or pandas dataframe if the corresponding table exists.
+        """ 	
+        
         # Create Connection
         engine, connection = self.create_connection(db_name, raw=True)
 
@@ -296,6 +450,7 @@ class BaseDB:
             return pd.DataFrame(data, columns = column_names) if column_names is not None else None
         else:
             return affected_rows
+
 
 def print_help():
     """

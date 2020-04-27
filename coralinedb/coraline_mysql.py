@@ -1,6 +1,5 @@
 # import python packages
 import pandas as pd
-from sqlalchemy import create_engine
 from coralinedb import BaseDB
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -11,24 +10,25 @@ class MySQLDB(BaseDB):
     Class for MySQL Database
     """
 
-    def get_engine(self, db_name):
+    def get_engine_url(self, db_name: str) -> str:
+        """Get engine URL for MySQL
+
+        Parameters
+        ----------
+        db_name : str
+            database name
+
+        Returns
+        -------
+        str
+            engine url
         """
-        Get engine by db_name
-        :return: DB engine
-        """
-        engine_key = db_name if db_name != "" else "_"
+        # Set Default Port
+        if self.port is None:
+            self.port = '3306'
 
-        if engine_key in self.engines:
-            engine = self.engines[engine_key]
-            try:
-                engine.dispose()
-            except:
-                pass
-
-        # Create a new one
-        self.engines[engine_key] = create_engine("mysql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name + '?charset=utf8mb4')
-
-        return self.engines[engine_key]
+        return f"mysql://{self.username}:{self.passwd}@{self.host}:{self.port}/{db_name}?charset=utf8mb4"
+        
 
     def get_databases(self):
         """
@@ -47,14 +47,15 @@ class MySQLDB(BaseDB):
 
         return result
 
-    def get_tables(self, db_name):
+
+    def get_tables(self, db_name: str):
         """
         List all tables in database
         :param db_name:  database name (str)
         :return: list of table names
         """
         # Create Connection
-        engine, connection = self.create_connection(db_name)
+        _, connection = self.create_connection(db_name)
 
         sql = 'show tables;'
         result = pd.read_sql(sql, connection, coerce_float=True).iloc[:, 0].values

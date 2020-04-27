@@ -1,4 +1,3 @@
-from sqlalchemy import create_engine
 import pandas as pd
 from coralinedb import BaseDB
 
@@ -7,25 +6,25 @@ class MSSQLDB(BaseDB):
     """
     Class for MS SQL Server
     """
+    def get_engine_url(self, db_name: str) -> str:
+        """Get Engine URL for MS SQL Server
 
-    def get_engine(self, db_name):
+        Parameters
+        ----------
+        db_name : str
+            database name
+
+        Returns
+        -------
+        str
+            engine url
         """
-        Get engine by db_name
-        :return: DB engine
-        """
-        engine_key = db_name if db_name != "" else "_"
+        # Set Default Port
+        if self.port is None:
+            self.port = '1433'
 
-        if engine_key in self.engines:
-            engine = self.engines[engine_key]
-            try:
-                engine.dispose()
-            except:
-                pass
+        return f"mssql+pymssql://{self.username}:{self.passwd}@{self.host}:{self.port}/{db_name}?charset=utf8mb4"
 
-        # Create a new one
-        self.engines[engine_key] = create_engine("mssql+pymssql://" + self.username + ":" + self.passwd + '@' + self.host + '/' + db_name)
-
-        return self.engines[engine_key]
 
     def get_databases(self):
         """
@@ -51,7 +50,7 @@ class MSSQLDB(BaseDB):
         :return: list of table names
         """
         # Create Connection
-        engine, connection = self.create_connection(db_name)
+        _, connection = self.create_connection(db_name)
 
         # Get result
         sql = 'SELECT * FROM information_schema.tables;'

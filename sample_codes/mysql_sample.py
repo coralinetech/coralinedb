@@ -1,12 +1,13 @@
+# %%
 from coralinedb import MySQLDB
 import pandas as pd
 from sqlalchemy.types import DECIMAL
-
+# %%
 host = ''
 username = ''
 password = ''
 db_name = ''
-
+# %%
 
 # Initial object
 db = MySQLDB(host, username, password)
@@ -16,6 +17,7 @@ print(db.get_databases())
 
 # Print all tables
 print(db.get_tables(db_name))
+# %%
 
 df = pd.DataFrame()
 df['A'] = [1.34434, 2.4, 3.3]
@@ -28,9 +30,15 @@ db.save_table(df, db_name, 'test_table', dtype={'A': DECIMAL(10, 5)})
 df = db.load_table(db_name, 'test_table')
 print(df)
 
+df = db.load_table(db_name, 'test_table', columns=['A', 'B'])
+print(df)
+
 # Query with where condition
 df = db.query('select * from test_table where A > %(A)s', db_name, params={'A':'2'})
 print(df)
 
 # Execute an sql statement
 res = db.execute('drop table test_table', db_name)
+
+
+# %%
