@@ -8,7 +8,7 @@ import coralinedb as cdb
 CORALINE_DB_DIR = os.path.abspath(os.path.join(os.getcwd(), os.pardir, 'coralinedb'))
 sys.path.append(CORALINE_DB_DIR)
 
-from util import get_simplified_column_name_and_delimiter, get_datatype_each_col
+from utils import get_simplified_column_name_and_delimiter, get_datatype_each_col
 
 DB_HOST = ''
 DB_USER = ''
@@ -18,7 +18,7 @@ DB_TABLE_NAME = ''
 
 if __name__ == "__main__":
 
-    file_path = 'dataset.csv'
+    file_path = './dataset.csv'
 
     # get array of simplified column names
     arr_header, delimiter = get_simplified_column_name_and_delimiter(file_path)
