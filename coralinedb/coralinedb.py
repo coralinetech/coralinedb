@@ -16,6 +16,12 @@ class BaseDB:
         - show_databases
         - show_tables
     """
+    host = ""
+    username = ""
+    passwd = ""
+    port = None
+    engines = {}
+
     def __init__(
         self, 
         host: str, 
