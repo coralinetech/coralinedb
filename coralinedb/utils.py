@@ -165,8 +165,8 @@ def convert_df_datatype_to_sqlalchemy_datatype(df):
         elif 'datetime' in str(df[col_name].dtype):
             dtype_dict[col_name] = sqlalchemy.types.DateTime()
         elif 'object' in str(df[col_name].dtype):
-            # check the limit of varhcar, if exeeds, then use TEXT
-            if arr_max_len_columns[i] > 255:
+            # check the limit of varhcar, if the length exeeds, then use TEXT
+            if arr_max_len_columns[i] > 1000:
                 dtype_dict[col_name] = sqlalchemy.types.Text()
             else:
                 dtype_dict[col_name] = sqlalchemy.types.VARCHAR(length=arr_max_len_columns[i])
