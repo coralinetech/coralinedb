@@ -49,3 +49,6 @@ e.g.
 affected_row = db.call_procedure("CALL store_procedure")
 dataframe = db.call_procedure("CALL store_procedure", return_df=True)
 ```
+
+## Compatibility with Django
+> After Django version 2.1.7, Django uses mysqlclient library to connect with MySQL Database. Therefore, Coralinedb uses pymsql library and this library is comptaible with Django only version 2.1.7 or lower.
